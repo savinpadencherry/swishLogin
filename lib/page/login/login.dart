@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:swishlogin/api/api_service.dart';
 import 'package:swishlogin/model/login_model.dart';
+import 'package:swishlogin/page/login/welcome.dart';
 import 'package:swishlogin/page/progressHud.dart';
 
 class Login extends StatefulWidget {
@@ -25,23 +26,33 @@ class _LoginState extends State<Login> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  login(String email, password) async {
+  Future<void> login(String email, password) async {
+    // this is for use if api services file is not connecting you the api
     try {
       Response response = await post(Uri.parse('https://reqres.in/api/login'),
-          body: {'email': email, 'password': password});
+          body: {
+            'email': emailController.text,
+            'password': passwordController.text
+          });
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body.toString());
         // ignore: avoid_print
         print(data['token']);
-        // ignore: avoid_print
-        print('Login successfully');
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Welcome")));
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => const Welcome()));
       } else {
         // ignore: avoid_print
         print('failed');
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Invalid Credentials")));
       }
     } catch (e) {
       // ignore: avoid_print
       print(e.toString());
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Type Something")));
     }
   }
 
@@ -54,13 +65,6 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-    return ProgressHUD(
-        child: _uiSetup(context),
-        inAsyncCall: isApiCallProcess,
-        valueColor: const AlwaysStoppedAnimation(Colors.white));
-  }
-
-  Widget _uiSetup(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.red,
       key: scaffoldKey,
