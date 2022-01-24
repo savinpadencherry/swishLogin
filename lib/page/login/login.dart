@@ -1,6 +1,9 @@
 //import 'dart:html';
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:swishlogin/api/api_service.dart';
 import 'package:swishlogin/model/login_model.dart';
 import 'package:swishlogin/page/progressHud.dart';
@@ -19,6 +22,28 @@ class _LoginState extends State<Login> {
   LoginRequestModel loginRequestModel =
       LoginRequestModel(email: '', password: '');
   bool isApiCallProcess = false;
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
+  login(String email, password) async {
+    try {
+      Response response = await post(Uri.parse('https://reqres.in/api/login'),
+          body: {'email': email, 'password': password});
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body.toString());
+        // ignore: avoid_print
+        print(data['token']);
+        // ignore: avoid_print
+        print('Login successfully');
+      } else {
+        // ignore: avoid_print
+        print('failed');
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print(e.toString());
+    }
+  }
 
   @override
   void initState() {
@@ -35,7 +60,6 @@ class _LoginState extends State<Login> {
         valueColor: const AlwaysStoppedAnimation(Colors.white));
   }
 
-  @override
   Widget _uiSetup(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.red,
@@ -76,6 +100,7 @@ class _LoginState extends State<Login> {
                         ),
                         const SizedBox(height: 20),
                         TextFormField(
+                          controller: emailController,
                           onSaved: (input) {
                             setState(() {
                               loginRequestModel.email = input!;
@@ -100,6 +125,7 @@ class _LoginState extends State<Login> {
                           height: 20,
                         ),
                         TextFormField(
+                          controller: passwordController,
                           onSaved: (input) => setState(() {
                             loginRequestModel.password = input!;
                           }),
@@ -142,32 +168,7 @@ class _LoginState extends State<Login> {
                                 ),
                               ),
                             ),
-                            onPressed: () {
-                              if (isValidate()) {
-                                setState(() {
-                                  isApiCallProcess = true;
-                                });
-                                ApiService apiService = ApiService();
-                                apiService.login(loginRequestModel).then((val) {
-                                  //you can add a progress bar here
-                                  if (val.token.isNotEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("Login Success"),
-                                      ),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("Login failed"),
-                                      ),
-                                    );
-                                  }
-                                });
-                                // ignore: avoid_print
-                                print(loginRequestModel.toJson());
-                              }
-                            },
+                            onPressed: onpress,
                             child: const Text(
                               "Login",
                               style: TextStyle(color: Colors.white),
@@ -184,6 +185,33 @@ class _LoginState extends State<Login> {
         ),
       ),
     );
+  }
+
+  onpress() {
+    if (isValidate()) {
+      setState(() {
+        isApiCallProcess = true;
+      });
+      ApiService apiService = ApiService();
+      apiService.login(loginRequestModel).then((val) {
+        //you can add a progress bar here
+        if (val.token.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Login Success"),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Login failed"),
+            ),
+          );
+        }
+      });
+      // ignore: avoid_print
+      print(loginRequestModel.toJson());
+    }
   }
 
   bool isValidate() {
