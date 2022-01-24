@@ -1,0 +1,6 @@
+package com.example.swishlogin
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity() {
+}
